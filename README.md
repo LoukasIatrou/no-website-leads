@@ -186,3 +186,19 @@ Tip: sort or filter by Reviews to find established businesses. Filter out blank 
 ## 12. Terms of service
 
 The Google Maps Platform terms limit how Places data may be stored and reused. This tool is intended for your own business outreach research. Do not resell or republish the exported data, and read Google's current terms before relying on it commercially. Contacting businesses is also subject to the rules where they operate, such as GDPR and ePrivacy in the EU, which covers Cyprus.
+
+## 13. Outreach (optional): `outreach.py`
+
+Takes `leads.xlsx`, drops businesses that have a website anywhere, finds an email, and saves an intro as a **Gmail draft** for you to review and send yourself.
+
+```
+export GMAIL_USER=you@gmail.com
+export GMAIL_APP_PASSWORD=...     # Google Account > Security > 2-Step Verification > App passwords
+python outreach.py leads.xlsx --limit 20
+```
+
+- Adds `Email` and `Status` columns (`site <url>`, `no email`, or `drafted <date>`). Rows with a Status are skipped on re-runs, so nothing is searched or drafted twice.
+- Edit `SUBJECT` / `TEMPLATE` at the top of `outreach.py` first.
+- A "site" is any search result whose domain contains the business name and is not social media or a directory. Greek-only names will not match; check by hand.
+- Keep it B2B, keep the opt-out line, and honour replies (ePrivacy/GDPR).
+- `python outreach.py --selftest` runs offline.
