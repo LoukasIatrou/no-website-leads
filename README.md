@@ -20,6 +20,7 @@ It is one Python file (`leads.py`) that uses the Google **Places API (New)** Tex
 10. [Troubleshooting](#10-troubleshooting)
 11. [Limitations](#11-limitations)
 12. [Terms of service](#12-terms-of-service)
+13. [Outreach (optional)](#13-outreach-optional-outreachpy)
 
 ---
 
@@ -58,19 +59,36 @@ The script prints the running call count after every category.
 
 Treat the key like a password. Do not commit it or paste it into screenshots.
 
+**If a key leaks** (you pasted it somewhere public, or you see charges you don't recognise): go to **APIs & Services**, **Credentials**, click the key, then **Regenerate key** (or **Delete** it and create a new one). The old key stops working right away. Then check **Billing**, **Reports** for unexpected usage. The same goes for the Gmail app password in section 13: revoke it at <https://myaccount.google.com/apppasswords> and make a new one.
+
 ## 4. Install
 
-You need Python 3.8 or newer.
+No Git or programming experience is needed. Follow these steps in order.
+
+**4.1 Install Python (once).** Download Python 3.8 or newer from <https://www.python.org/downloads/>. On Windows, tick **"Add python.exe to PATH"** on the first installer screen, then click Install. To check it worked, open a terminal (step 4.3) and run `python --version`. It should print a version number. On macOS/Linux you may need `python3` instead of `python` everywhere in this guide.
+
+**4.2 Get the code.** Pick one:
+
+- **No Git (easiest):** open <https://github.com/LoukasIatrou/no-website-leads>, click the green **Code** button, then **Download ZIP**. Right-click the ZIP and extract it. You now have a folder called `no-website-leads-main`.
+- **With Git:** `git clone https://github.com/LoukasIatrou/no-website-leads.git`
+
+**4.3 Open a terminal inside that folder.**
+
+- **Windows:** open the folder in File Explorer, click the address bar, type `cmd`, press Enter.
+- **macOS:** right-click the folder, choose **New Terminal at Folder** (enable it under System Settings, Keyboard, Keyboard Shortcuts, Services if you don't see it).
+- **Linux:** right-click inside the folder, choose **Open in Terminal**.
+
+Every command in this guide is typed into that terminal window, then Enter.
+
+**4.4 Install the one library the script needs.**
 
 ```
-git clone https://github.com/LoukasIatrou/no-website-leads.git
-cd no-website-leads
 pip install openpyxl
 ```
 
 `openpyxl` writes the Excel file. Nothing else is needed, because HTTP uses the standard library.
 
-Set your API key as an environment variable. It is read from `GOOGLE_MAPS_API_KEY`.
+**4.5 Set your API key.** It is read from the `GOOGLE_MAPS_API_KEY` environment variable (a setting that lives in the terminal window you typed it in).
 
 | Shell | Command |
 |---|---|
@@ -78,7 +96,7 @@ Set your API key as an environment variable. It is read from `GOOGLE_MAPS_API_KE
 | Windows cmd | `set GOOGLE_MAPS_API_KEY=your-key` |
 | macOS / Linux / Git Bash | `export GOOGLE_MAPS_API_KEY=your-key` |
 
-The variable lasts only for that terminal window, so set it again in each new window.
+The variable lasts only for that terminal window, so set it again in each new window. Do not put the real key in any file you share or upload to GitHub.
 
 ## 5. Verify the install
 
@@ -166,7 +184,10 @@ Tip: sort or filter by Reviews to find established businesses. Filter out blank 
 
 | Message | Cause and fix |
 |---|---|
-| `need GOOGLE_MAPS_API_KEY` | The environment variable is not set in this terminal. See section 4. |
+| `'python' is not recognized` (Windows) or `command not found` | Python is not installed or not on PATH. Reinstall it and tick "Add python.exe to PATH" (section 4.1), or try `python3` / `py`. |
+| `need GOOGLE_MAPS_API_KEY` | The environment variable is not set in this terminal. See section 4.5. |
+| `need GMAIL_USER, GMAIL_APP_PASSWORD` | Set both variables in this terminal window (section 13.2). |
+| `imaplib.error ... AUTHENTICATIONFAILED` | Use the 16-character app password, not your normal Gmail password, and make sure 2-Step Verification is on. |
 | `API error 403 ... API_KEY_INVALID` or `PERMISSION_DENIED` | Wrong key, or the key is restricted to a different API. Enable **Places API (New)** and allow it in the key restrictions. |
 | `API error 403 ... billing` | Billing is not enabled on the project. See step 3.3. |
 | `API error 429` | Quota exceeded: your daily cap, or Google's rate limit. Wait, or raise the quota. Results so far are saved. |
@@ -189,13 +210,46 @@ The Google Maps Platform terms limit how Places data may be stored and reused. T
 
 ## 13. Outreach (optional): `outreach.py`
 
-Takes `leads.xlsx`, drops businesses that have a website anywhere, finds an email, and saves an intro as a **Gmail draft** for you to review and send yourself.
+Takes the Excel file from `leads.py`, drops businesses that have a website anywhere, looks for an email address, and saves an intro as a **Gmail draft**. It never sends anything: you open Gmail, read each draft, and press Send yourself.
+
+> **Status: experimental.** The web-search step scrapes Bing, and Bing currently returns unrelated results to scripted requests, so most rows will end up as `no email`. The search function (`search()` in `outreach.py`) needs a better backend before this is useful. Everything else (Gmail drafts, the skip-already-done logic) is in place. Do not send drafts without checking them.
+
+**Before you start:** finish sections 3 to 7 so you have a `leads.xlsx` (or `test.xlsx`) file in the folder.
+
+**13.1 Make a Gmail app password.** This is a separate 16-character password that lets the script create drafts without your real password.
+
+1. Go to <https://myaccount.google.com/security> and turn on **2-Step Verification** if it is off.
+2. Open <https://myaccount.google.com/apppasswords>, name it `leads`, click **Create**, and copy the 16 characters.
+
+**13.2 Set the two variables** in the terminal (see section 4.3), in the same window you will run the script in:
+
+| Shell | Commands |
+|---|---|
+| Windows PowerShell | `$env:GMAIL_USER = "you@gmail.com"` then `$env:GMAIL_APP_PASSWORD = "abcdefghijklmnop"` |
+| Windows cmd | `set GMAIL_USER=you@gmail.com` then `set GMAIL_APP_PASSWORD=abcdefghijklmnop` |
+| macOS / Linux / Git Bash | `export GMAIL_USER=you@gmail.com` then `export GMAIL_APP_PASSWORD=abcdefghijklmnop` |
+
+**13.3 Write your email.** Open `outreach.py` in Notepad (or any text editor) and edit `SUBJECT` and `TEMPLATE` near the top. `{name}` is replaced by each business name. Replace the sample text and the "Louks" signature with your own, and keep the opt-out line.
+
+**13.4 Check the script works offline** (no cost):
 
 ```
-export GMAIL_USER=you@gmail.com
-export GMAIL_APP_PASSWORD=...     # Google Account > Security > 2-Step Verification > App passwords
-python outreach.py leads.xlsx --limit 20
+python outreach.py --selftest
 ```
+
+It should print `selftest ok`.
+
+**13.5 Try 2 leads first:**
+
+```
+python outreach.py test.xlsx --limit 2
+```
+
+Then open Gmail, go to **Drafts**, and read them. Check the recipient and name are right. Run the same command again: it must not create the same drafts twice.
+
+**13.6 Run more.** `--limit 20` is the default and a sensible batch size. Re-running continues where it stopped. Press Ctrl+C at any time; progress is saved.
+
+**Notes**
 
 - Adds `Email` and `Status` columns (`site <url>`, `no email`, or `drafted <date>`). Rows with a Status are skipped on re-runs, so nothing is searched or drafted twice.
 - Edit `SUBJECT` / `TEMPLATE` at the top of `outreach.py` first.
